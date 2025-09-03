@@ -299,7 +299,7 @@ func (c *Controller) processNextServiceItem(ctx context.Context) bool {
 		klog.Warningf("error processing service %v (retrying in %s): %v", key, re.RetryAfter(), err)
 		c.serviceQueue.AddAfter(key, re.RetryAfter())
 	} else {
-		runtime.HandleError(fmt.Errorf("error processing service %v (retrying with exponential backoff): %v", key, err))
+		runtime.HandleErrorWithContext(ctx, err, "error processing service %v (retrying with exponential backoff): %v", key)
 		c.serviceQueue.AddRateLimited(key)
 	}
 
@@ -889,7 +889,7 @@ func (c *Controller) syncService(ctx context.Context, key string) error {
 		// service absence in store means watcher caught the deletion, ensure LB info is cleaned
 		err = c.processServiceDeletion(ctx, key)
 	case err != nil:
-		runtime.HandleError(fmt.Errorf("Unable to retrieve service %v from store: %v", key, err))
+		runtime.HandleErrorWithContext(ctx, err, "Unable to retrieve service %v from store: %v", key)
 	default:
 		// It is not safe to modify an object returned from an informer.
 		// As reconcilers may modify the service object we need to copy

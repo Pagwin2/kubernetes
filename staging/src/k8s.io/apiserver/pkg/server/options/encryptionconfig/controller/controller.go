@@ -179,7 +179,7 @@ func (d *DynamicEncryptionConfigContent) processWorkItem(serverCtx context.Conte
 
 		if err != nil {
 			metrics.RecordEncryptionConfigAutomaticReloadFailure(d.apiServerID)
-			utilruntime.HandleError(fmt.Errorf("error processing encryption config file %s: %v", d.filePath, err))
+			utilruntime.HandleErrorWithContext(ctx, err, "error processing encryption config file %s: %v", d.filePath)
 			// add dummy item back to the queue to trigger file content processing.
 			d.queue.AddRateLimited(workqueueKey)
 		}

@@ -231,7 +231,7 @@ func (cnc *CloudNodeController) processNextWorkItem(ctx context.Context) bool {
 			// Put the item back on the workqueue to handle any transient errors.
 			cnc.workqueue.AddRateLimited(key)
 			klog.Infof("error syncing '%s': %v, requeuing", key, err)
-			return fmt.Errorf("error syncing '%s': %s, requeuing", key, err.Error())
+			return err
 		}
 
 		// Finally, if no error occurs we Forget this item so it does not
@@ -241,7 +241,7 @@ func (cnc *CloudNodeController) processNextWorkItem(ctx context.Context) bool {
 	}(obj)
 
 	if err != nil {
-		utilruntime.HandleError(err)
+		utilruntime.HandleErrorWithContext(ctx, err, "error syncing '%s': %s, requeuing", obj, err.Error())
 		return true
 	}
 
@@ -252,7 +252,7 @@ func (cnc *CloudNodeController) processNextWorkItem(ctx context.Context) bool {
 func (cnc *CloudNodeController) syncHandler(ctx context.Context, key string) error {
 	_, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
-		utilruntime.HandleError(fmt.Errorf("invalid resource key: %s", key))
+		utilruntime.HandleErrorWithContext(ctx, err, "invalid resource key: %s", key)
 		return nil
 	}
 
